@@ -1,12 +1,14 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Memo,
-  MemoFormData,
-  MEMO_CATEGORIES,
-  DEFAULT_CATEGORIES,
-} from '@/types/memo'
+import dynamic from 'next/dynamic'
+import { Memo, MemoFormData, MEMO_CATEGORIES, DEFAULT_CATEGORIES } from '@/types/memo'
+
+// MDEditor를 동적으로 import (SSR 이슈 방지)
+const MDEditor = dynamic(
+  () => import('@uiw/react-md-editor').then((mod) => mod.default),
+  { ssr: false }
+)
 
 interface MemoFormProps {
   isOpen: boolean
@@ -29,7 +31,7 @@ export default function MemoForm({
   })
   const [tagInput, setTagInput] = useState('')
 
-  // 편집 모드일 때 폼 데이터 설정
+  // 편집 모드일 때 데이터 설정
   useEffect(() => {
     if (editingMemo) {
       setFormData({
@@ -88,7 +90,7 @@ export default function MemoForm({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* 헤더 */}
           <div className="flex justify-between items-center mb-6">
@@ -135,7 +137,7 @@ export default function MemoForm({
                     title: e.target.value,
                   }))
                 }
-                className="placeholder-gray-400 text-gray-400 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="메모 제목을 입력하세요"
                 required
               />
@@ -158,7 +160,7 @@ export default function MemoForm({
                     category: e.target.value,
                   }))
                 }
-                className="text-gray-400 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 {DEFAULT_CATEGORIES.map(category => (
                   <option key={category} value={category}>
@@ -168,28 +170,31 @@ export default function MemoForm({
               </select>
             </div>
 
-            {/* 내용 */}
+            {/* 마크다운 에디터 */}
             <div>
-              <label
-                htmlFor="content"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                내용 *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                내용 * (마크다운 지원)
               </label>
-              <textarea
-                id="content"
-                value={formData.content}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    content: e.target.value,
-                  }))
-                }
-                className="placeholder-gray-400 text-gray-400 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
-                placeholder="메모 내용을 입력하세요"
-                rows={8}
-                required
-              />
+              <div data-color-mode="light">
+                <MDEditor
+                  value={formData.content}
+                  onChange={(value) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      content: value || '',
+                    }))
+                  }}
+                  preview="edit"
+                  hideToolbar={false}
+                  visibleDragBar={false}
+                  height={400}
+                  data-color-mode="light"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                마크다운 문법을 사용하여 텍스트를 서식할 수 있습니다. 
+                우측 탭에서 프리뷰를 확인하세요.
+              </p>
             </div>
 
             {/* 태그 */}
@@ -203,19 +208,17 @@ export default function MemoForm({
                   value={tagInput}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={handleTagInputKeyDown}
-                  className="placeholder-gray-400 text-black flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="태그를 입력하고 Enter를 누르세요"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg transition-colors"
                 >
                   추가
                 </button>
               </div>
-
-              {/* 태그 목록 */}
               {formData.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {formData.tags.map((tag, index) => (

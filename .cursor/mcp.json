@@ -4,11 +4,11 @@
       "command": "npx",
       "args": [
         "-y",
-        "@supabase/mcp-server-supabase@0.4.5",
-        "--project-ref=<project-ref>"
+        "@supabase/mcp-server-supabaselastest",
+        "--project-ref=aeismfiobodjpoactmtm"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "<personal-access-token>"
+        "SUPABASE_ACCESS_TOKEN": "sbp_c1fc9cfb5f8402b5f60a52f9010b1933c4e6c3d3"
       }
     },
     "playwright-mcp": {
